@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clasificador de Spam</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 300px;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .error-message {
+            color: red;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .result {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        /* Estilos para la ventana emergente (popup) */
+        .popup {
+            display: none; /* Inicialmente la ventana está oculta */
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 9999;
+        }
+
+        .popup button {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Clasificador de Spam</h1>
+        <form action="/predict" method="post" id="spam-form">
+            <input type="text" name="message" id="message" placeholder="Escribe tu mensaje" required>
+            <button type="submit">Clasificar</button>
+            <div id="error-message" class="error-message" style="display: none;">Por favor, ingresa un mensaje.</div>
+        </form>
+
+        <div id="result" class="result" style="display: none;">
+            <!-- Aquí aparecerá el resultado de la clasificación -->
+        </div>
+    </div>
+
+    <!-- Ventana emergente -->
+    <div class="popup" id="popup">
+        <p>Principalmente en desktop, próximamente en la red.</p>
+        <button onclick="closePopup()">Cerrar</button>
+    </div>
+
+    <script>
+        const form = document.getElementById('spam-form');
+        const errorMessage = document.getElementById('error-message');
+        const resultDiv = document.getElementById('result');
+
+        // Mostrar la ventana emergente cuando la página se cargue
+        window.onload = function () {
+            document.getElementById("popup").style.display = "block";
+        };
+
+        // Función para cerrar la ventana emergente
+        function closePopup() {
+            document.getElementById("popup").style.display = "none";
+        }
+
+        form.onsubmit = async function (event) {
+            event.preventDefault(); // Prevenir el comportamiento por defecto del formulario
+
+            const message = document.getElementById('message').value;
+
+            // Verificar si el mensaje está vacío
+            if (message.trim() === '') {
+                errorMessage.style.display = 'block';
+                resultDiv.style.display = 'none';
+                return;
+            }
+
+            // Ocultar el mensaje de error si hay texto
+            errorMessage.style.display = 'none';
+
+            // Enviar el mensaje al servidor y obtener la predicción
+            const response = await fetch('/predict', {
+                method: 'POST',
+                body: new URLSearchParams({
+                    'message': message
+                }),
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            });
+
+            const data = await response.json();
+
+            // Mostrar el resultado
+            if (data.clasificacion) {
+                resultDiv.style.display = 'block';
+                resultDiv.textContent = `Clasificación: ${data.clasificacion}`;
+            } else if (data.error) {
+                resultDiv.style.display = 'block';
+                resultDiv.textContent = `Error: ${data.error}`;
+            }
+        }
+    </script>
+</body>
+
+</html>
+
